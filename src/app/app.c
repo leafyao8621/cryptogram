@@ -8,11 +8,11 @@ enum AppErr App_initialize(struct App *app, char *path) {
         return APP_ERR_NULL_PTR;
     }
 
-    if (DArrayChar_initialize(&app->lookup_raw, 1024)) {
+    if (DArrayChar_initialize(&app->dictionary_raw, 1024)) {
         return APP_ERR_OUT_OF_MEMORY;
     }
 
-    if (DArrayIdx_initialize(&app->lookup_idx, 1024)) {
+    if (DArrayIdx_initialize(&app->dictionary_idx, 1024)) {
         return APP_ERR_OUT_OF_MEMORY;
     }
 
@@ -28,8 +28,8 @@ enum AppErr App_initialize(struct App *app, char *path) {
 }
 
 void App_finalize(struct App *app) {
-    DArrayChar_finalize(&app->lookup_raw);
-    DArrayIdx_finalize(&app->lookup_idx);
+    DArrayChar_finalize(&app->dictionary_raw);
+    DArrayIdx_finalize(&app->dictionary_idx);
 }
 
 enum AppErr App_log(struct App *app, FILE *fout) {
@@ -37,15 +37,15 @@ enum AppErr App_log(struct App *app, FILE *fout) {
         return APP_ERR_NULL_PTR;
     }
     for (
-        Idx i = 0, *ii = app->lookup_idx.data;
-        i < app->lookup_idx.size;
+        Idx i = 0, *ii = app->dictionary_idx.data;
+        i < app->dictionary_idx.size;
         ++i, ++ii) {
         fprintf(
             fout,
             "%04lu %010lu %s\n",
             i,
             *ii,
-            app->lookup_raw.data + *ii
+            app->dictionary_raw.data + *ii
         );
     }
     return APP_ERR_OK;

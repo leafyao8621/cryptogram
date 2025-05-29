@@ -4,8 +4,11 @@
 #include "../util/containers.h"
 
 struct App {
-    DArrayChar lookup_raw;
-    DArrayIdx lookup_idx;
+    DArrayChar dictionary_raw;
+    DArrayIdx dictionary_idx;
+    DArrayChar input_raw;
+    DArrayIdx input_idx;
+    DArrayChar lookup;
 };
 
 enum AppErr {

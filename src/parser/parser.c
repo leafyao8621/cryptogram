@@ -2,17 +2,17 @@
 
 enum ParserErr Parser_parse_lookup(FILE *fin, struct App *app) {
     size_t idx = 0;
-    if (DArrayIdx_push_back(&app->lookup_idx, &idx)) {
+    if (DArrayIdx_push_back(&app->dictionary_idx, &idx)) {
         return PARSER_ERR_OUT_OF_MEMORY;
     }
     for (char c = fgetc(fin); !feof(fin); c = fgetc(fin)) {
         if (c == '\n') {
             c = 0;
-            if (DArrayChar_push_back(&app->lookup_raw, &c)) {
+            if (DArrayChar_push_back(&app->dictionary_raw, &c)) {
                 return PARSER_ERR_OUT_OF_MEMORY;
             }
             ++idx;
-            if (DArrayIdx_push_back(&app->lookup_idx, &idx)) {
+            if (DArrayIdx_push_back(&app->dictionary_idx, &idx)) {
                 return PARSER_ERR_OUT_OF_MEMORY;
             }
         } else if (c == '\r') {
@@ -21,14 +21,14 @@ enum ParserErr Parser_parse_lookup(FILE *fin, struct App *app) {
             if (c >= 'a' && c <= 'z') {
                 c ^= 0x20;
             }
-            if (DArrayChar_push_back(&app->lookup_raw, &c)) {
+            if (DArrayChar_push_back(&app->dictionary_raw, &c)) {
                 return PARSER_ERR_OUT_OF_MEMORY;
             }
             ++idx;
         }
     }
     char c = 0;
-    if (DArrayChar_push_back(&app->lookup_raw, &c)) {
+    if (DArrayChar_push_back(&app->dictionary_raw, &c)) {
         return PARSER_ERR_OUT_OF_MEMORY;
     }
     return PARSER_ERR_OK;
