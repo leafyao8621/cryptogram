@@ -9,6 +9,7 @@ struct App {
     DArrayChar input_raw;
     DArrayIdx input_idx;
     DArrayChar lookup;
+    DArrayIdx output;
 };
 
 enum AppErr {
