@@ -33,3 +33,37 @@ enum ParserErr Parser_parse_lookup(FILE *fin, struct App *app) {
     }
     return PARSER_ERR_OK;
 }
+
+enum ParserErr Parser_parse_input(FILE *fin, struct App *app) {
+    DArrayChar_clear(&app->input_raw);
+    DArrayIdx_clear(&app->input_idx);
+    size_t idx = 0;
+    if (DArrayIdx_push_back(&app->input_idx, &idx)) {
+        return PARSER_ERR_OUT_OF_MEMORY;
+    }
+    for (char c = fgetc(fin); c != '\n'; c = fgetc(fin)) {
+        if (feof(fin)) {
+            return PARSER_ERR_EOF;
+        }
+        if (c == ' ') {
+            c = 0;
+            if (DArrayChar_push_back(&app->input_raw, &c)) {
+                return PARSER_ERR_OUT_OF_MEMORY;
+            }
+            ++idx;
+            if (DArrayIdx_push_back(&app->input_idx, &idx)) {
+                return PARSER_ERR_OUT_OF_MEMORY;
+            }
+        } else {
+            if (DArrayChar_push_back(&app->input_raw, &c)) {
+                return PARSER_ERR_OUT_OF_MEMORY;
+            }
+            ++idx;
+        }
+    }
+    char c = 0;
+    if (DArrayChar_push_back(&app->input_raw, &c)) {
+        return PARSER_ERR_OUT_OF_MEMORY;
+    }
+    return PARSER_ERR_OK;
+}

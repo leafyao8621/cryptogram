@@ -8,8 +8,10 @@
 enum ParserErr {
     PARSER_ERR_OK,
     PARSER_ERR_OUT_OF_MEMORY,
+    PARSER_ERR_EOF
 };
 
 enum ParserErr Parser_parse_lookup(FILE *fin, struct App *app);
+enum ParserErr Parser_parse_input(FILE *fin, struct App *app);
 
 #endif

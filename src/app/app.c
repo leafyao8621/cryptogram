@@ -31,6 +31,7 @@ enum AppErr App_initialize(struct App *app, char *path) {
     if (DArrayIdx_initialize(&app->output, 1024)) {
         return APP_ERR_OUT_OF_MEMORY;
     }
+
     FILE *fin = fopen(path, "r");
     if (!fin) {
         return APP_ERR_INVALID_PATH;
@@ -51,7 +52,7 @@ void App_finalize(struct App *app) {
     DArrayIdx_finalize(&app->output);
 }
 
-enum AppErr App_log(struct App *app, FILE *fout) {
+enum AppErr App_log_dictionary(struct App *app, FILE *fout) {
     if (!app || !fout) {
         return APP_ERR_NULL_PTR;
     }
@@ -65,6 +66,37 @@ enum AppErr App_log(struct App *app, FILE *fout) {
             i,
             *ii,
             app->dictionary_raw.data + *ii
+        );
+    }
+    return APP_ERR_OK;
+}
+
+enum AppErr App_parse_input(struct App *app, FILE *fin) {
+    enum ParserErr err = Parser_parse_input(fin, app);
+    switch (err) {
+    case PARSER_ERR_EOF:
+        return APP_ERR_EOF;
+    case PARSER_ERR_OUT_OF_MEMORY:
+        return APP_ERR_OUT_OF_MEMORY;
+    default:
+        return APP_ERR_OK;
+    }
+}
+
+enum AppErr App_log_input(struct App *app, FILE *fout) {
+    if (!app || !fout) {
+        return APP_ERR_NULL_PTR;
+    }
+    for (
+        Idx i = 0, *ii = app->input_idx.data;
+        i < app->input_idx.size;
+        ++i, ++ii) {
+        fprintf(
+            fout,
+            "%010lu %010lu %s\n",
+            i,
+            *ii,
+            app->input_raw.data + *ii
         );
     }
     return APP_ERR_OK;
