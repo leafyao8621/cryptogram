@@ -178,7 +178,6 @@ enum AppErr App_solve(struct App *app) {
     char advance = 1;
     for (; app->output.size < app->input_idx.size;) {
         if (advance) {
-            puts("advance");
             if (DArrayIdx_push_back(&app->output, &negative_one)) {
                 return APP_ERR_OUT_OF_MEMORY;
             }
@@ -190,7 +189,6 @@ enum AppErr App_solve(struct App *app) {
         if (
             app->output.data[app->output.size - 1] ==
             app->dictionary_idx.size) {
-            puts("back");
             DArrayIdx_pop_back(&app->output);
             DArrayChar_pop_back_batch(&app->lookup, 26);
             advance = 0;
