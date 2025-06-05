@@ -56,6 +56,23 @@ int main(void) {
             DArrayChar_finalize(&dictionary_path);
             return 1;
         }
+        err = App_solve(&app);
+        if (err && err != APP_ERR_NOT_FOUND) {
+            printf("Solve %d\n", err);
+            App_finalize(&app);
+            DArrayChar_finalize(&dictionary_path);
+            return 1;
+        } else if (err == APP_ERR_NOT_FOUND) {
+            puts("Not found");
+            continue;
+        }
+        err = App_log_output(&app, stdout);
+        if (err) {
+            printf("Output Log %d\n", err);
+            App_finalize(&app);
+            DArrayChar_finalize(&dictionary_path);
+            return 1;
+        }
     }
     App_finalize(&app);
     DArrayChar_finalize(&dictionary_path);

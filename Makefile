@@ -5,7 +5,7 @@ OBJ = $(SRC:.c=.o)
 BIN = cryptogram
 
 %.o: %.c
-	$(CC) $(CFLAGS) -g -c $< -o $@ -Iinclude
+	$(CC) $(CFLAGS) -O3 -c $< -o $@ -Iinclude
 
 $(BIN): $(OBJ)
 	$(CC) $(OBJ) -o $(BIN) -lcontainers

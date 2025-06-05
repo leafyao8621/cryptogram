@@ -87,6 +87,7 @@ enum AppErr App_log_input(struct App *app, FILE *fout) {
     if (!app || !fout) {
         return APP_ERR_NULL_PTR;
     }
+    fputs("Input:\n", fout);
     for (
         Idx i = 0, *ii = app->input_idx.data;
         i < app->input_idx.size;
@@ -97,6 +98,121 @@ enum AppErr App_log_input(struct App *app, FILE *fout) {
             i,
             *ii,
             app->input_raw.data + *ii
+        );
+    }
+    return APP_ERR_OK;
+}
+
+static int find(struct App *app) {
+    char lookup[26];
+    for (
+        ++app->output.data[app->output.size - 1];
+        app->output.data[app->output.size - 1] <
+        app->dictionary_idx.size;
+        ++app->output.data[app->output.size - 1]) {
+        memcpy(lookup, app->lookup.data + app->lookup.size - 26, 26);
+        char *iter_input =
+            app->input_raw.data +
+            app->input_idx.data[app->output.size - 1];
+        char *iter_dictionary =
+            app->dictionary_raw.data +
+            app->dictionary_idx.data[app->output.data[app->output.size - 1]];
+        for (
+            ;
+            *iter_input && *iter_dictionary;
+            ++iter_input, ++iter_dictionary) {
+            if (*iter_input >= 'a' && *iter_input <= 'z') {
+                if (*iter_dictionary <= 'A' || *iter_dictionary >= 'Z') {
+                    break;
+                }
+                if (lookup[*iter_input - 'a']) {
+                    if (lookup[*iter_input - 'a'] != *iter_dictionary) {
+                        break;
+                    }
+                } else {
+                    char *iter_lookup = lookup;
+                    for (
+                        ;
+                        iter_lookup < lookup + 26 &&
+                        *iter_lookup != *iter_dictionary;
+                        ++iter_lookup);
+                    if (iter_lookup != lookup + 26) {
+                        break;
+                    }
+                    lookup[*iter_input - 'a'] = *iter_dictionary;
+                }
+            } else {
+                if (*iter_input != *iter_dictionary) {
+                    break;
+                }
+            }
+        }
+        if (!*iter_input && !*iter_dictionary) {
+            break;
+        }
+    }
+    if (
+        app->output.data[app->output.size - 1] <
+        app->dictionary_idx.size) {
+        if (DArrayChar_push_back_batch(&app->lookup, lookup, 26)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+enum AppErr App_solve(struct App *app) {
+    DArrayIdx_clear(&app->output);
+    DArrayChar_clear(&app->lookup);
+    char lookup[26] = {0};
+    if (DArrayChar_push_back_batch(&app->lookup, lookup, 26)) {
+        return APP_ERR_OUT_OF_MEMORY;
+    }
+    size_t negative_one = -1;
+    char advance = 1;
+    for (; app->output.size < app->input_idx.size;) {
+        if (advance) {
+            if (DArrayIdx_push_back(&app->output, &negative_one)) {
+                return APP_ERR_OUT_OF_MEMORY;
+            }
+        }
+        int ret = find(app);
+        if (ret) {
+            return APP_ERR_OUT_OF_MEMORY;
+        }
+        if (
+            app->output.data[app->output.size - 1] ==
+            app->dictionary_idx.size) {
+            DArrayIdx_pop_back(&app->output);
+            DArrayChar_pop_back_batch(&app->lookup, 26);
+            advance = 0;
+        } else {
+            advance = 1;
+        }
+        if (!app->output.size) {
+            return APP_ERR_NOT_FOUND;
+        }
+        App_log_output(app, stdout);
+    }
+    return APP_ERR_OK;
+}
+
+enum AppErr App_log_output(struct App *app, FILE *fout) {
+    if (!app || !fout) {
+        return APP_ERR_NULL_PTR;
+    }
+    fputs("Output:\n", fout);
+    for (
+        Idx i = 0, *ii = app->output.data;
+        i < app->output.size;
+        ++i, ++ii) {
+        fprintf(
+            fout,
+            "%010lu %010lu %010lu %s\n",
+            i,
+            *ii,
+            app->dictionary_idx.data[*ii],
+            app->dictionary_raw.data + app->dictionary_idx.data[*ii]
         );
     }
     return APP_ERR_OK;
