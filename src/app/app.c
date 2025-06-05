@@ -183,11 +183,7 @@ enum AppErr App_solve(struct App *app) {
                 return APP_ERR_OUT_OF_MEMORY;
             }
         }
-        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
-        printf("output size: %lu\n", app->output.size);
         int ret = find(app, advance);
-        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
-        printf("output size: %lu\n", app->output.size);
         if (ret) {
             return APP_ERR_OUT_OF_MEMORY;
         }
@@ -201,8 +197,6 @@ enum AppErr App_solve(struct App *app) {
         } else {
             advance = 1;
         }
-        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
-        printf("output size: %lu\n", app->output.size);
         if (!app->output.size) {
             return APP_ERR_NOT_FOUND;
         }
