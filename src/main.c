@@ -3,11 +3,41 @@
 
 #include "app/app.h"
 
-int main(void) {
+static const char *msg =
+    "Usage: cryptogram [OPTIONS]\n"
+    "Options:\n"
+    "-s\n"
+    "-v\n"
+    "-d\n";
+
+int main(int argc, char **argv) {
     struct App app;
     enum AppErr err = APP_ERR_OK;
+    int ret = 0;
+    bool verbose = false;
+    bool silent = false;
+    bool dictionary = false;
+    for (; (ret = getopt(argc, argv, "vsd")) != -1;) {
+        switch (ret) {
+        case 'v':
+            verbose = true;
+            break;
+        case 's':
+            silent = true;
+            break;
+        case 'd':
+            dictionary = true;
+            break;
+        case ':':
+            perror(msg);
+            return -1;
+        case '?':
+            perror(msg);
+            return -1;
+        }
+    }
     String dictionary_path;
-    int ret = DArrayChar_initialize(&dictionary_path, 1000);
+    ret = DArrayChar_initialize(&dictionary_path, 1000);
     if (ret) {
         puts("Out of Memory");
         return 1;
@@ -30,35 +60,43 @@ int main(void) {
         DArrayChar_finalize(&dictionary_path);
         return 1;
     }
-    // if ((err = App_log_dictionary(&app, stdout))) {
-    //     printf("%d\n", err);
-    //     App_finalize(&app);
-    //     DArrayChar_finalize(&dictionary_path);
-    //     return 2;
-    // }
-    puts("Ready");
+    if (dictionary) {
+        if ((err = App_log_dictionary(&app, stdout))) {
+            printf("%d\n", err);
+            App_finalize(&app);
+            DArrayChar_finalize(&dictionary_path);
+            return 2;
+        }
+    }
+    if (!silent) {
+        puts("Ready");
+    }
     for (;;) {
-        printf("%s", "> ");
-        fflush(stdout);
+        if (!silent) {
+            printf("%s", "> ");
+            fflush(stdout);
+        }
         err = App_parse_input(&app, stdin);
         if (err == APP_ERR_EOF) {
             break;
         } else if (err) {
-            printf("Parse %d\n", err);
+            fprintf(stderr, "Parse %d\n", err);
             App_finalize(&app);
             DArrayChar_finalize(&dictionary_path);
             return 1;
         }
-        err = App_log_input(&app, stdout);
-        if (err) {
-            printf("Parse Log %d\n", err);
-            App_finalize(&app);
-            DArrayChar_finalize(&dictionary_path);
-            return 1;
+        if (verbose) {
+            err = App_log_input(&app, stdout);
+            if (err) {
+                fprintf(stderr, "Parse Log %d\n", err);
+                App_finalize(&app);
+                DArrayChar_finalize(&dictionary_path);
+                return 1;
+            }
         }
-        err = App_solve(&app);
+        err = App_solve(&app, verbose);
         if (err && err != APP_ERR_NOT_FOUND) {
-            printf("Solve %d\n", err);
+            fprintf(stderr, "Solve %d\n", err);
             App_finalize(&app);
             DArrayChar_finalize(&dictionary_path);
             return 1;
@@ -68,7 +106,7 @@ int main(void) {
         }
         err = App_log_output(&app, stdout);
         if (err) {
-            printf("Output Log %d\n", err);
+            fprintf(stderr, "Output Log %d\n", err);
             App_finalize(&app);
             DArrayChar_finalize(&dictionary_path);
             return 1;

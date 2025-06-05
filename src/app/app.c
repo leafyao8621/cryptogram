@@ -103,7 +103,7 @@ enum AppErr App_log_input(struct App *app, FILE *fout) {
     return APP_ERR_OK;
 }
 
-static int find(struct App *app, char advance) {
+static int find(struct App *app, bool advance) {
     char lookup[26];
     for (
         ++app->output.data[app->output.size - 1];
@@ -167,7 +167,7 @@ static int find(struct App *app, char advance) {
 
 
 
-enum AppErr App_solve(struct App *app) {
+enum AppErr App_solve(struct App *app, bool verbose) {
     DArrayIdx_clear(&app->output);
     DArrayChar_clear(&app->lookup);
     char lookup[26] = {0};
@@ -175,7 +175,7 @@ enum AppErr App_solve(struct App *app) {
         return APP_ERR_OUT_OF_MEMORY;
     }
     size_t negative_one = -1;
-    char advance = 1;
+    bool advance = true;
     for (; app->output.size < app->input_idx.size;) {
         if (advance) {
             if (DArrayIdx_push_back(&app->output, &negative_one)) {
@@ -191,14 +191,16 @@ enum AppErr App_solve(struct App *app) {
             app->dictionary_idx.size) {
             DArrayIdx_pop_back(&app->output);
             DArrayChar_pop_back_batch(&app->lookup, 26);
-            advance = 0;
+            advance = false;
         } else {
-            advance = 1;
+            advance = true;
         }
         if (!app->output.size) {
             return APP_ERR_NOT_FOUND;
         }
-        App_log_output(app, stdout);
+        if (verbose) {
+            App_log_output(app, stdout);
+        }
     }
     return APP_ERR_OK;
 }

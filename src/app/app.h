@@ -26,7 +26,7 @@ void App_finalize(struct App *app);
 enum AppErr App_log_dictionary(struct App *app, FILE *fout);
 enum AppErr App_parse_input(struct App *app, FILE *fin);
 enum AppErr App_log_input(struct App *app, FILE *fout);
-enum AppErr App_solve(struct App *app);
+enum AppErr App_solve(struct App *app, bool verbose);
 enum AppErr App_log_output(struct App *app, FILE *fout);
 
 #endif
