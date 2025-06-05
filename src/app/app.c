@@ -103,14 +103,18 @@ enum AppErr App_log_input(struct App *app, FILE *fout) {
     return APP_ERR_OK;
 }
 
-static int find(struct App *app) {
+static int find(struct App *app, char advance) {
     char lookup[26];
     for (
         ++app->output.data[app->output.size - 1];
         app->output.data[app->output.size - 1] <
         app->dictionary_idx.size;
         ++app->output.data[app->output.size - 1]) {
-        memcpy(lookup, app->lookup.data + app->lookup.size - 26, 26);
+        memcpy(
+            lookup,
+            app->lookup.data + app->lookup.size - (advance ? 26 : 52),
+            26
+        );
         char *iter_input =
             app->input_raw.data +
             app->input_idx.data[app->output.size - 1];
@@ -122,7 +126,7 @@ static int find(struct App *app) {
             *iter_input && *iter_dictionary;
             ++iter_input, ++iter_dictionary) {
             if (*iter_input >= 'a' && *iter_input <= 'z') {
-                if (*iter_dictionary <= 'A' || *iter_dictionary >= 'Z') {
+                if (*iter_dictionary < 'A' || *iter_dictionary > 'Z') {
                     break;
                 }
                 if (lookup[*iter_input - 'a']) {
@@ -151,15 +155,17 @@ static int find(struct App *app) {
             break;
         }
     }
-    if (
-        app->output.data[app->output.size - 1] <
-        app->dictionary_idx.size) {
+    if (advance) {
         if (DArrayChar_push_back_batch(&app->lookup, lookup, 26)) {
             return 1;
         }
+    } else {
+        memcpy(app->lookup.data + app->lookup.size - 26, lookup, 26);
     }
     return 0;
 }
+
+
 
 enum AppErr App_solve(struct App *app) {
     DArrayIdx_clear(&app->output);
@@ -172,23 +178,31 @@ enum AppErr App_solve(struct App *app) {
     char advance = 1;
     for (; app->output.size < app->input_idx.size;) {
         if (advance) {
+            puts("advance");
             if (DArrayIdx_push_back(&app->output, &negative_one)) {
                 return APP_ERR_OUT_OF_MEMORY;
             }
         }
-        int ret = find(app);
+        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
+        printf("output size: %lu\n", app->output.size);
+        int ret = find(app, advance);
+        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
+        printf("output size: %lu\n", app->output.size);
         if (ret) {
             return APP_ERR_OUT_OF_MEMORY;
         }
         if (
             app->output.data[app->output.size - 1] ==
             app->dictionary_idx.size) {
+            puts("back");
             DArrayIdx_pop_back(&app->output);
             DArrayChar_pop_back_batch(&app->lookup, 26);
             advance = 0;
         } else {
             advance = 1;
         }
+        printf("lookup size: %lu %lu %lu\n", app->lookup.size, app->lookup.size / 26, app->lookup.size % 26);
+        printf("output size: %lu\n", app->output.size);
         if (!app->output.size) {
             return APP_ERR_NOT_FOUND;
         }
